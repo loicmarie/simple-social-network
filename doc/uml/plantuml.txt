@@ -1,0 +1,119 @@
+@startuml
+
+!define table(x) class x << (T,#FFAAAA) >>
+hide methods
+
+object Roles {
+  +visitor? : boolean
+  +user? : boolean
+  +admin? : boolean
+}
+
+abstract class User << Document >> {
+  +id : << PK >>
+  +firstName : string
+  +lastName : string
+  +roles : Roles
+  {abstract} +displayName(): string
+  +like(contributionId : string)
+  +publishes(contribution : Post)
+}
+
+table(friends) {
+  +<< FK:User >>
+  +<< FK:User >>
+}
+hide friends methods
+
+table(followers) {
+  +<< FK:User >>
+  +<< FK:User >>
+}
+hide followers methods
+
+class Post << Document >> {
+  +id : << PK >>
+  +publisherId : << FK >>
+  +text : string
+  +images : PostImage[]
+  +videos : PostVideo[]
+  +loc? : Coordinates
+}
+
+class Coordinates {
+  +long : number
+  +lat : number
+}
+
+class PostImage {
+
+}
+
+class PostVideo {
+
+}
+
+class Group << Document >> {
+  +id : << PK >>
+  +name : string
+}
+
+table(groups_members) {
+  +<< FK:User >>
+  +<< FK:Group >>
+}
+hide groups_members methods
+
+table(groups_publications) {
+  +<< FK:Group >>
+  +<< FK:Post >>
+}
+hide groups_publications methods
+
+table(likes) {
+  +value : number
+  +<< FK:User >>
+  +<< FK:Post >>
+}
+hide likes methods
+
+table(comments) {
+  +<< FK:User >>
+  +<< FK:Post >>
+  +text : string
+}
+
+Post "1" -- "0..n" comments : is commented >
+User "1" -- "0..n" comments : comments >
+
+
+
+
+User --> "1" Roles
+
+User "0..n" -- "0..n" User : friends
+(User, User) .. friends
+User "0..n" -- "0..n" User : follows >
+(User, User) .. followers
+
+Post "1" *-- "0..n" PostImage
+Post "1" *-- "0..n" PostVideo
+Post "1" --> "0..1" Coordinates
+
+User "0..n" -- "0..n" Post : likes >
+(User, Post) *.. likes
+User "1" *-- "0..n" Post : publishes >
+
+Group "0..n" -- "0..n" User : members >
+(Group, User) .. groups_members
+
+Group "0..n" -- "0..n" Post : < published on
+(Group, Post) .. groups_publications
+
+abstract class Document {
+  +createdAt : timestamp
+  +updatedAt : timestamp
+}
+
+
+@enduml
